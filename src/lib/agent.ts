@@ -26,6 +26,8 @@ Extract structured data for each place found directly from search results. Each 
 
 Do NOT use scrape_website. Extract all information from search results only.
 
+IMPORTANT: Use a MAXIMUM of 2 searches total. Do one broad search to find the top places, and at most one follow-up search if critical contact details are missing. Do NOT do a separate search for each individual place — extract everything from the initial results.
+
 Once you have gathered all the places, call save_to_sheets with the complete list.
 
 IMPORTANT: After calling save_to_sheets, respond with exactly ONE sentence in the voice of a polished personal butler — gracious, warm, and subtly luxurious. For example: "I have taken the liberty of selecting five of Portland's most exquisite coffee houses, each chosen with your pleasure in mind — your list has been prepared." Do NOT include markdown, bullet points, tables, or multiple sentences. Just one beautifully crafted sentence.`;
