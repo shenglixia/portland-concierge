@@ -8,6 +8,8 @@ export type ReviewData = {
   photoUrl: string | null;
   photos: string[];
   placeId: string | null;
+  openNow: boolean | null;
+  hours: string[];
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -28,9 +30,9 @@ export async function GET(req: NextRequest) {
 
   if (!placeId) return NextResponse.json({ error: "Place not found" }, { status: 404 });
 
-  // Step 2: Get place details (rating + reviews + photo)
+  // Step 2: Get place details (rating + reviews + photo + hours)
   const detailRes = await fetch(
-    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating,user_ratings_total,reviews,photos&key=${API_KEY}`
+    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating,user_ratings_total,reviews,photos,opening_hours&key=${API_KEY}`
   );
   const detailData = await detailRes.json();
   const result = detailData.result;
@@ -48,6 +50,8 @@ export async function GET(req: NextRequest) {
     photoUrl,
     photos,
     placeId: placeId ?? null,
+    openNow: result?.opening_hours?.open_now ?? null,
+    hours: result?.opening_hours?.weekday_text ?? [],
     reviews: (result?.reviews ?? []).slice(0, 5).map((r: {author_name: string; text: string; rating: number}) => ({
       author: r.author_name,
       text: r.text,

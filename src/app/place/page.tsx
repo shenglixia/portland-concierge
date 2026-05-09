@@ -9,6 +9,8 @@ type DetailData = {
   photoUrl: string | null;
   photos: string[];
   placeId: string | null;
+  openNow: boolean | null;
+  hours: string[];
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -231,6 +233,32 @@ function PlaceDetailContent() {
               </a>
             )}
           </div>
+
+          {/* Opening hours */}
+          {data && data.hours.length > 0 && (
+            <div className="border-t border-gray-50 pt-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className={`text-sm font-semibold ${data.openNow === true ? "text-green-600" : data.openNow === false ? "text-red-500" : "text-gray-500"}`}>
+                  {data.openNow === true ? "Open now" : data.openNow === false ? "Closed now" : "Hours"}
+                </span>
+              </div>
+              <div className="space-y-1 pl-6">
+                {data.hours.map((line, i) => {
+                  const [day, ...rest] = line.split(": ");
+                  const isToday = i === (new Date().getDay() + 6) % 7;
+                  return (
+                    <div key={i} className={`flex justify-between text-xs gap-4 ${isToday ? "font-semibold text-gray-900" : "text-gray-500"}`}>
+                      <span>{day}</span>
+                      <span>{rest.join(": ")}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* WhatsApp share */}
           <div className="border-t border-gray-50 pt-4">
