@@ -9,6 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
+    "@mendable/firecrawl-js": "^4.22.2",
+    "@tavily/core": "^0.7.3",
+    "ai": "^6.0.177",
+    "googleapis": "^171.4.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
