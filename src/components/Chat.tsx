@@ -37,11 +37,25 @@ function getGreeting() {
 }
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = sessionStorage.getItem("chat_messages");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("chat_messages", JSON.stringify(messages));
+    } catch {}
+  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -147,7 +161,7 @@ export default function Chat() {
             {/* New chat button */}
             <div className="flex justify-end">
               <button
-                onClick={() => setMessages([])}
+                onClick={() => { setMessages([]); sessionStorage.removeItem("chat_messages"); }}
                 disabled={loading}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-500 border border-gray-200 bg-white rounded-xl px-3 py-2 hover:border-indigo-300 transition-colors shadow-sm disabled:opacity-40"
               >
