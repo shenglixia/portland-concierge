@@ -21,10 +21,11 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 const QUICK_ACTIONS = [
-  "Find barbershops in Austin TX",
-  "Find coffee shops in Brooklyn NY",
-  "Find gyms in Chicago IL",
-  "Find restaurants in Miami FL",
+  "Find coffee shops",
+  "Find bars",
+  "Find restaurants",
+  "Find outdoor adventures",
+  "Find vineyards",
 ];
 
 function getGreeting() {
@@ -136,12 +137,26 @@ export default function Chat() {
             <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
               {getGreeting()}
               <br />
-              <span className="text-gray-900">How Can I </span>
-              <span className="text-indigo-500">Assist You Today?</span>
+              <span className="text-gray-900">How May I </span>
+              <span className="text-indigo-500">Be of Service?</span>
             </h1>
           </div>
         ) : (
           <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+            {/* New chat button */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setMessages([])}
+                disabled={loading}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-500 border border-gray-200 bg-white rounded-xl px-3 py-2 hover:border-indigo-300 transition-colors shadow-sm disabled:opacity-40"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                New chat
+              </button>
+            </div>
+
             {messages.map((msg, i) => (
               <div key={i}>
                 {msg.role === "user" ? (
@@ -164,7 +179,10 @@ export default function Chat() {
                           ))}
                           {loading && i === messages.length - 1 && (
                             <div className="flex items-center gap-2 text-xs text-indigo-400">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+                              <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                              </svg>
                               Working...
                             </div>
                           )}
@@ -229,7 +247,7 @@ export default function Chat() {
                   sendMessage();
                 }
               }}
-              placeholder="Initiate a query or send a command to the AI..."
+              placeholder="What may I arrange for you this evening?"
               disabled={loading}
               rows={1}
               className="flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none disabled:opacity-50 leading-relaxed"
@@ -250,6 +268,12 @@ export default function Chat() {
   );
 }
 
+function normalizeUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
 const AVATAR_COLORS = [
   "bg-indigo-100 text-indigo-600",
   "bg-emerald-100 text-emerald-600",
@@ -259,26 +283,18 @@ const AVATAR_COLORS = [
   "bg-yellow-100 text-yellow-600",
 ];
 
-function PlaceLogo({ name, website, colorClass }: { name: string; website?: string; colorClass: string }) {
+function PlaceLogo({ name, photoUrl, colorClass }: { name: string; photoUrl?: string | null; colorClass: string }) {
   const [imgFailed, setImgFailed] = useState(false);
   const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
-  let logoUrl: string | null = null;
-  if (website && !imgFailed) {
-    try {
-      const domain = new URL(website).hostname.replace("www.", "");
-      logoUrl = `https://logo.clearbit.com/${domain}`;
-    } catch { /* invalid URL */ }
-  }
-
-  if (logoUrl && !imgFailed) {
+  if (photoUrl && !imgFailed) {
     return (
-      <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+      <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 shadow-sm bg-gray-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={logoUrl}
+          src={photoUrl}
           alt={name}
-          className="w-full h-full object-contain p-1"
+          className="w-full h-full object-cover"
           onError={() => setImgFailed(true)}
         />
       </div>
@@ -295,6 +311,7 @@ function PlaceLogo({ name, website, colorClass }: { name: string; website?: stri
 type ReviewData = {
   rating: number;
   reviewCount: number;
+  photoUrl: string | null;
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -309,6 +326,7 @@ function StarRating({ rating }: { rating: number }) {
 
 function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
   const [review, setReview] = useState<ReviewData | null>(null);
+  const [loadingReview, setLoadingReview] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
 
@@ -316,21 +334,31 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
     fetch(`/api/reviews?name=${encodeURIComponent(p.name)}&address=${encodeURIComponent(address)}`)
       .then((r) => r.json())
       .then((d) => { if (d.rating) setReview(d); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingReview(false));
   }, [p.name, address]);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 hover:shadow-md transition-shadow">
       <div className="flex gap-4">
         {/* Logo */}
-        <PlaceLogo name={p.name} website={p.website} colorClass={colorClass} />
+        {loadingReview && !review ? (
+          <div className="w-16 h-16 rounded-2xl bg-gray-100 shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-gray-300 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+            </svg>
+          </div>
+        ) : (
+          <PlaceLogo name={p.name} photoUrl={review?.photoUrl} colorClass={colorClass} />
+        )}
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
             {p.website && (
-              <a href={p.website} target="_blank" rel="noreferrer" className="shrink-0 text-indigo-400 hover:text-indigo-600">
+              <a href={normalizeUrl(p.website)} target="_blank" rel="noreferrer" className="shrink-0 text-indigo-400 hover:text-indigo-600">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -342,6 +370,12 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
           {address && <p className="text-xs text-gray-400 mt-0.5 truncate">{address}</p>}
 
           {/* Rating */}
+          {loadingReview && !review && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="h-3 w-20 bg-gray-100 rounded-full animate-pulse" />
+              <div className="h-3 w-16 bg-gray-100 rounded-full animate-pulse" />
+            </div>
+          )}
           {review && (
             <div className="flex items-center gap-2 mt-1.5">
               <StarRating rating={review.rating} />
