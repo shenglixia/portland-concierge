@@ -255,7 +255,7 @@ export default function Chat() {
           )}
 
           {/* Input box */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-md flex items-end gap-2 px-4 py-3">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-md flex items-center gap-2 px-4 py-3">
             <textarea
               ref={textareaRef}
               value={input}
