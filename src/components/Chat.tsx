@@ -149,7 +149,7 @@ export default function Chat() {
             {/* Portland image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/portland.jpg"
+              src="/porland.jpg"
               alt="Portland"
               className="w-52 h-52 rounded-3xl object-cover shadow-lg mb-6"
             />
