@@ -7,6 +7,7 @@ export type ReviewData = {
   reviewCount: number;
   photoUrl: string | null;
   photos: string[];
+  placeId: string | null;
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -46,6 +47,7 @@ export async function GET(req: NextRequest) {
     reviewCount: result?.user_ratings_total ?? 0,
     photoUrl,
     photos,
+    placeId: placeId ?? null,
     reviews: (result?.reviews ?? []).slice(0, 5).map((r: {author_name: string; text: string; rating: number}) => ({
       author: r.author_name,
       text: r.text,

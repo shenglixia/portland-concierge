@@ -8,6 +8,7 @@ type DetailData = {
   reviewCount: number;
   photoUrl: string | null;
   photos: string[];
+  placeId: string | null;
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -241,6 +242,11 @@ function PlaceDetailContent() {
                   address && address,
                   phone && `📞 ${phone}`,
                   website && normalizeUrl(website),
+                  data?.placeId
+                    ? `🗺️ https://www.google.com/maps/place/?q=place_id:${data.placeId}`
+                    : address
+                    ? `🗺️ https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + address)}`
+                    : null,
                 ]
                   .filter(Boolean)
                   .join("\n")
