@@ -162,21 +162,7 @@ export default function Chat() {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-            {/* New chat button */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => { setMessages([]); sessionStorage.removeItem("chat_messages"); }}
-                disabled={loading}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#4a5c3a] border border-gray-200 bg-white rounded-xl px-3 py-2 hover:border-[#8a9a6a] transition-colors shadow-sm disabled:opacity-40"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                New chat
-              </button>
-            </div>
-
-            {messages.map((msg, i) => (
+{messages.map((msg, i) => (
               <div key={i}>
                 {msg.role === "user" ? (
                   <div className="flex justify-end">
