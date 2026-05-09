@@ -155,10 +155,9 @@ export default function Chat() {
             />
 
             <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
-              {getGreeting()}
+              Welcome to Portland
               <br />
-              <span className="text-gray-900">How May I </span>
-              <span className="text-[#4a5c3a]">Be of Service?</span>
+              <span className="text-[#4a5c3a]">How May I Be of Service?</span>
             </h1>
           </div>
         ) : (
