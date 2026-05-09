@@ -154,7 +154,7 @@ export default function Chat() {
               className="w-[26rem] h-[26rem] rounded-3xl object-cover shadow-lg mb-6"
             />
 
-            <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
+            <h1 className="text-4xl font-bold text-gray-900 text-center leading-snug" style={{ fontFamily: "'Playfair Display', serif" }}>
               Welcome to Portland
               <br />
               <span className="text-[#4a5c3a]">How May I Be of Service?</span>
