@@ -178,9 +178,9 @@ export default function Chat() {
                         </div>
                       )}
 
-                      {/* Results table */}
+                      {/* Results cards */}
                       {msg.places && msg.places.length > 0 && (
-                        <PlacesTable places={msg.places} />
+                        <PlacesCards places={msg.places} />
                       )}
 
                       {/* Thinking state */}
@@ -259,8 +259,40 @@ const AVATAR_COLORS = [
   "bg-yellow-100 text-yellow-600",
 ];
 
-function PlacesTable({ places }: { places: Place[] }) {
-  const [openMenu, setOpenMenu] = useState<number | null>(null);
+function PlaceLogo({ name, website, colorClass }: { name: string; website?: string; colorClass: string }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  let logoUrl: string | null = null;
+  if (website && !imgFailed) {
+    try {
+      const domain = new URL(website).hostname.replace("www.", "");
+      logoUrl = `https://logo.clearbit.com/${domain}`;
+    } catch { /* invalid URL */ }
+  }
+
+  if (logoUrl && !imgFailed) {
+    return (
+      <div className="w-16 h-16 rounded-2xl border border-gray-100 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt={name}
+          className="w-full h-full object-contain p-1"
+          onError={() => setImgFailed(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-lg font-bold shrink-0 ${colorClass}`}>
+      {initials}
+    </div>
+  );
+}
+
+function PlacesCards({ places }: { places: Place[] }) {
   const [showEmail, setShowEmail] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -284,91 +316,65 @@ function PlacesTable({ places }: { places: Place[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 shadow-sm bg-white overflow-hidden w-full">
-      {/* Header */}
-      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-gray-100">
-        {["NAME / ADDRESS", "PHONE", "CATEGORIES", "WEBSITE", "ACTION"].map((h) => (
-          <div key={h} className="text-[11px] font-semibold text-gray-400 tracking-wide uppercase">{h}</div>
-        ))}
-      </div>
+    <div className="w-full space-y-2">
+      {places.map((p, i) => {
+        const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
+        const colorClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
 
-      {/* Rows */}
-      <div className="divide-y divide-gray-100">
-        {places.map((p, i) => {
-          const initials = p.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-          const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
-          const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
+        return (
+          <div key={i} className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 flex gap-4 hover:shadow-md transition-shadow">
+            {/* Logo */}
+            <PlaceLogo name={p.name} website={p.website} colorClass={colorClass} />
 
-          return (
-            <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 hover:bg-gray-50 transition-colors">
-              {/* Name + address */}
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${color}`}>
-                  {initials}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
-                  <div className="text-xs text-gray-400 truncate">{address || "—"}</div>
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div className="text-sm text-gray-600">{p.phone || "—"}</div>
-
-              {/* Categories */}
-              <div className="text-sm text-gray-500 truncate">{p.categories || "—"}</div>
-
-              {/* Website */}
-              <div>
-                {p.website ? (
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
+                {p.website && (
                   <a href={p.website} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:underline font-medium">
-                    Visit site
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    className="shrink-0 text-indigo-400 hover:text-indigo-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>
-                ) : <span className="text-sm text-gray-400">—</span>}
+                )}
               </div>
 
-              {/* Action menu */}
-              <div className="relative">
-                <button
-                  onClick={() => setOpenMenu(openMenu === i ? null : i)}
-                  className="text-indigo-400 hover:text-indigo-600 px-1"
-                >
-                  ···
-                </button>
-                {openMenu === i && (
-                  <div className="absolute right-0 top-6 z-10 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-36 text-sm">
-                    {p.email && (
-                      <a href={`mailto:${p.email}`}
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
-                        Email
-                      </a>
-                    )}
-                    {p.phone && (
-                      <a href={`tel:${p.phone}`}
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
-                        Call
-                      </a>
-                    )}
-                    {p.website && (
-                      <a href={p.website} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
-                        Website
-                      </a>
-                    )}
-                  </div>
+              {p.categories && (
+                <p className="text-xs text-indigo-500 mt-0.5">{p.categories}</p>
+              )}
+              {address && (
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{address}</p>
+              )}
+
+              {/* Chips */}
+              <div className="flex flex-wrap gap-2 mt-2.5">
+                {p.phone && (
+                  <a href={`tel:${p.phone}`}
+                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {p.phone}
+                  </a>
+                )}
+                {p.email && (
+                  <a href={`mailto:${p.email}`}
+                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {p.email}
+                  </a>
                 )}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+      <div className="flex items-center justify-between pt-1 px-1">
         <span className="text-xs text-gray-400">
           {places.length} place{places.length !== 1 ? "s" : ""} saved to Google Sheets
         </span>
@@ -391,7 +397,6 @@ function PlacesTable({ places }: { places: Place[] }) {
             <p className="text-xs text-gray-500 mb-4">
               We'll send {places.length} result{places.length !== 1 ? "s" : ""} as a formatted email.
             </p>
-
             <input
               type="email"
               value={emailTo}
@@ -401,11 +406,9 @@ function PlacesTable({ places }: { places: Place[] }) {
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-4"
               autoFocus
             />
-
             {emailStatus === "error" && (
               <p className="text-xs text-red-500 mb-3">Failed to send. Check the address and try again.</p>
             )}
-
             <div className="flex gap-2">
               <button
                 onClick={() => { setShowEmail(false); setEmailStatus("idle"); setEmailTo(""); }}
