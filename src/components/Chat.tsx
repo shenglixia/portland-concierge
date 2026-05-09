@@ -151,7 +151,7 @@ export default function Chat() {
             <img
               src="/porland.jpg"
               alt="Portland"
-              className="w-52 h-52 rounded-3xl object-cover shadow-lg mb-6"
+              className="w-[26rem] h-[26rem] rounded-3xl object-cover shadow-lg mb-6"
             />
 
             <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
