@@ -69,12 +69,12 @@ function PlaceDetailContent() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#f4f4f8]">
+    <div className="min-h-screen bg-[#ede8dc]">
       {/* Sticky header */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-gray-100 px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-indigo-500 transition-colors shrink-0"
+          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-[#4a5c3a] transition-colors shrink-0"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -108,7 +108,7 @@ function PlaceDetailContent() {
                       onClick={() => setActivePhoto(i)}
                       className={`w-full aspect-square rounded-xl overflow-hidden border-2 transition-all ${
                         i === activePhoto
-                          ? "border-indigo-400 shadow-md opacity-100"
+                          ? "border-[#4a5c3a] shadow-md opacity-100"
                           : "border-transparent opacity-50 hover:opacity-80"
                       }`}
                     >
@@ -166,7 +166,7 @@ function PlaceDetailContent() {
               </div>
             </div>
           ) : (
-            <div className="h-64 bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center">
+            <div className="h-64 bg-gradient-to-br from-[#e8edd8] to-[#dde3c8] flex items-center justify-center">
               <span className="text-6xl font-bold text-indigo-200">{initials}</span>
             </div>
           )}
@@ -177,7 +177,7 @@ function PlaceDetailContent() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900 leading-tight">{name}</h2>
-              {categories && <p className="text-sm text-indigo-500 mt-1">{categories}</p>}
+              {categories && <p className="text-sm text-[#4a5c3a] mt-1">{categories}</p>}
             </div>
             {data && data.rating > 0 && (
               <div className="text-right shrink-0">
@@ -201,7 +201,7 @@ function PlaceDetailContent() {
               </div>
             )}
             {phone && (
-              <a href={`tel:${phone}`} className="flex items-center gap-3 text-sm text-gray-600 hover:text-indigo-500 transition-colors">
+              <a href={`tel:${phone}`} className="flex items-center gap-3 text-sm text-gray-600 hover:text-[#4a5c3a] transition-colors">
                 <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -209,7 +209,7 @@ function PlaceDetailContent() {
               </a>
             )}
             {email && (
-              <a href={`mailto:${email}`} className="flex items-center gap-3 text-sm text-gray-600 hover:text-indigo-500 transition-colors">
+              <a href={`mailto:${email}`} className="flex items-center gap-3 text-sm text-gray-600 hover:text-[#4a5c3a] transition-colors">
                 <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
@@ -221,7 +221,7 @@ function PlaceDetailContent() {
                 href={normalizeUrl(website)}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-3 text-sm text-indigo-500 hover:text-indigo-700 transition-colors"
+                className="flex items-center gap-3 text-sm text-[#4a5c3a] hover:text-[#344231] transition-colors"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -272,7 +272,7 @@ function PlaceDetailContent() {
                     className={i < data.reviews.length - 1 ? "pb-6 border-b border-gray-50" : ""}
                   >
                     <div className="flex items-center gap-3 mb-2.5">
-                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600 shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-[#e8edd8] flex items-center justify-center text-sm font-bold text-[#4a5c3a] shrink-0">
                         {r.author.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -300,8 +300,8 @@ export default function PlacePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#f4f4f8] flex items-center justify-center">
-          <svg className="w-8 h-8 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+        <div className="min-h-screen bg-[#ede8dc] flex items-center justify-center">
+          <svg className="w-8 h-8 text-[#6b7c52] animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>

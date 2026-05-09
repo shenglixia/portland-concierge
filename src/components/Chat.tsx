@@ -140,20 +140,25 @@ export default function Chat() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#f4f4f8] flex flex-col">
+    <div className="min-h-screen bg-[#ede8dc] flex flex-col">
       {/* Conversation area */}
       <div className="flex-1 overflow-y-auto">
         {!hasMessages ? (
           /* Empty state — centered hero */
           <div className="flex flex-col items-center justify-center min-h-screen px-4 pb-48">
-            {/* Orb */}
-            <div className="w-16 h-16 rounded-full mb-6 bg-gradient-to-br from-indigo-300 via-purple-300 to-blue-400 blur-[2px] opacity-90 shadow-lg shadow-purple-300" />
+            {/* Portland image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/portland.jpg"
+              alt="Portland"
+              className="w-52 h-52 rounded-3xl object-cover shadow-lg mb-6"
+            />
 
             <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
               {getGreeting()}
               <br />
               <span className="text-gray-900">How May I </span>
-              <span className="text-indigo-500">Be of Service?</span>
+              <span className="text-[#4a5c3a]">Be of Service?</span>
             </h1>
           </div>
         ) : (
@@ -163,7 +168,7 @@ export default function Chat() {
               <button
                 onClick={() => { setMessages([]); sessionStorage.removeItem("chat_messages"); }}
                 disabled={loading}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-500 border border-gray-200 bg-white rounded-xl px-3 py-2 hover:border-indigo-300 transition-colors shadow-sm disabled:opacity-40"
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#4a5c3a] border border-gray-200 bg-white rounded-xl px-3 py-2 hover:border-[#8a9a6a] transition-colors shadow-sm disabled:opacity-40"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -176,7 +181,7 @@ export default function Chat() {
               <div key={i}>
                 {msg.role === "user" ? (
                   <div className="flex justify-end">
-                    <div className="bg-indigo-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] text-sm leading-relaxed">
+                    <div className="bg-[#4a5c3a] text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] text-sm leading-relaxed">
                       {msg.text}
                     </div>
                   </div>
@@ -188,12 +193,12 @@ export default function Chat() {
                         <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl px-4 py-3 space-y-1.5">
                           {msg.steps.map((step, j) => (
                             <div key={j} className="flex items-center gap-2 text-xs text-gray-500">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#6b7c52] shrink-0" />
                               {step}
                             </div>
                           ))}
                           {loading && i === messages.length - 1 && (
-                            <div className="flex items-center gap-2 text-xs text-indigo-400">
+                            <div className="flex items-center gap-2 text-xs text-[#6b7c52]">
                               <svg className="w-3 h-3 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
@@ -242,7 +247,7 @@ export default function Chat() {
                 <button
                   key={action}
                   onClick={() => sendMessage(action)}
-                  className="text-xs bg-white border border-gray-200 text-gray-600 rounded-full px-3 py-1.5 hover:border-indigo-300 hover:text-indigo-500 transition-colors shadow-sm"
+                  className="text-xs bg-white border border-gray-200 text-gray-600 rounded-full px-3 py-1.5 hover:border-[#8a9a6a] hover:text-[#4a5c3a] transition-colors shadow-sm"
                 >
                   {action}
                 </button>
@@ -270,7 +275,7 @@ export default function Chat() {
             <button
               onClick={() => sendMessage()}
               disabled={loading || !input.trim()}
-              className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-8 h-8 rounded-xl bg-[#4a5c3a] flex items-center justify-center shrink-0 hover:bg-[#344231] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
@@ -290,7 +295,7 @@ function normalizeUrl(url: string): string {
 }
 
 const AVATAR_COLORS = [
-  "bg-indigo-100 text-indigo-600",
+  "bg-[#e8edd8] text-[#4a5c3a]",
   "bg-emerald-100 text-emerald-600",
   "bg-orange-100 text-orange-600",
   "bg-pink-100 text-pink-600",
@@ -392,7 +397,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
             {p.website && (
-              <a href={normalizeUrl(p.website)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-indigo-400 hover:text-indigo-600">
+              <a href={normalizeUrl(p.website)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-[#6b7c52] hover:text-[#344231]">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -400,7 +405,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
             )}
           </div>
 
-          {p.categories && <p className="text-xs text-indigo-500 mt-0.5">{p.categories}</p>}
+          {p.categories && <p className="text-xs text-[#4a5c3a] mt-0.5">{p.categories}</p>}
           {address && <p className="text-xs text-gray-400 mt-0.5 truncate">{address}</p>}
 
           {/* Rating */}
@@ -417,7 +422,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
               {review.reviews.length > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-                  className="text-xs text-indigo-400 hover:text-indigo-600 ml-auto"
+                  className="text-xs text-[#6b7c52] hover:text-[#344231] ml-auto"
                 >
                   {expanded ? "Hide reviews" : "See reviews"}
                 </button>
@@ -501,7 +506,7 @@ function PlacesCards({ places }: { places: Place[] }) {
         </span>
         <button
           onClick={() => setShowEmail(true)}
-          className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-[#4a5c3a] hover:text-[#344231] transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -524,7 +529,7 @@ function PlacesCards({ places }: { places: Place[] }) {
               onChange={(e) => setEmailTo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendEmail()}
               placeholder="you@example.com"
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-4"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8a9a6a] mb-4"
               autoFocus
             />
             {emailStatus === "error" && (
@@ -540,7 +545,7 @@ function PlacesCards({ places }: { places: Place[] }) {
               <button
                 onClick={sendEmail}
                 disabled={!emailTo.trim() || emailStatus === "sending" || emailStatus === "sent"}
-                className="flex-1 bg-indigo-500 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#4a5c3a] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[#344231] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {emailStatus === "sending" ? "Sending..." : emailStatus === "sent" ? "Sent!" : "Send"}
               </button>
