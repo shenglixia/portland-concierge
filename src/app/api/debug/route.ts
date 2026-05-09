@@ -7,5 +7,6 @@ export async function GET(req: NextRequest) {
     firecrawl: process.env.FIRECRAWL_API_KEY ? "SET" : "MISSING",
     sheets: process.env.GOOGLE_SHEET_ID ? "SET" : "MISSING",
     sa: process.env.GOOGLE_SERVICE_ACCOUNT_JSON ? "SET" : "MISSING",
+    places: process.env.GOOGLE_PLACES_API_KEY ? process.env.GOOGLE_PLACES_API_KEY.slice(0,10) + "..." : "MISSING",
   });
 }
