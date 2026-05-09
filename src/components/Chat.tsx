@@ -191,8 +191,8 @@ export default function Chat() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-start">
-                    <div className="max-w-[90%] space-y-3">
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-2xl space-y-3">
                       {/* Tool steps — hide once results are in */}
                       {msg.steps && msg.steps.length > 0 && (!msg.places || msg.places.length === 0) && (
                         <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl px-4 py-3 space-y-1.5">
