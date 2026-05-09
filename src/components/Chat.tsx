@@ -173,8 +173,8 @@ export default function Chat() {
                 ) : (
                   <div className="flex justify-start">
                     <div className="max-w-[90%] space-y-3">
-                      {/* Tool steps */}
-                      {msg.steps && msg.steps.length > 0 && (
+                      {/* Tool steps — hide once results are in */}
+                      {msg.steps && msg.steps.length > 0 && (!msg.places || msg.places.length === 0) && (
                         <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl px-4 py-3 space-y-1.5">
                           {msg.steps.map((step, j) => (
                             <div key={j} className="flex items-center gap-2 text-xs text-gray-500">
