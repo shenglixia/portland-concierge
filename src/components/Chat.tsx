@@ -20,33 +20,54 @@ const TOOL_LABELS: Record<string, string> = {
   save_to_sheets: "Saving to Google Sheets",
 };
 
+const QUICK_ACTIONS = [
+  "Find barbershops in Austin TX",
+  "Find coffee shops in Brooklyn NY",
+  "Find gyms in Chicago IL",
+  "Find restaurants in Miami FL",
+];
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading) return;
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
+  }, [input]);
+
+  async function sendMessage(text?: string) {
+    const msg = (text ?? input).trim();
+    if (!msg || loading) return;
     setInput("");
     setLoading(true);
 
-    const userMsg: Message = { role: "user", text };
+    const userMsg: Message = { role: "user", text: msg };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Build history for the API
     const history = messages.map((m) =>
       m.role === "user"
         ? { role: "user" as const, content: m.text }
         : { role: "assistant" as const, content: m.text }
     );
 
-    // Add a blank assistant message we'll fill in as events stream
     setMessages((prev) => [
       ...prev,
       { role: "assistant", text: "", steps: [], places: [] },
@@ -56,7 +77,7 @@ export default function Chat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history }),
+        body: JSON.stringify({ message: msg, history }),
       });
 
       const reader = res.body!.getReader();
@@ -67,7 +88,6 @@ export default function Chat() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
 
@@ -77,25 +97,16 @@ export default function Chat() {
           if (payload === "[DONE]") break;
 
           const event: AgentEvent = JSON.parse(payload);
-
           setMessages((prev) => {
             const updated = [...prev];
-            const last = { ...updated[updated.length - 1] } as Extract<
-              Message,
-              { role: "assistant" }
-            >;
+            const last = { ...updated[updated.length - 1] } as Extract<Message, { role: "assistant" }>;
 
             if (event.type === "text") {
               last.text += event.content;
             } else if (event.type === "tool_start") {
               const label = TOOL_LABELS[event.tool] ?? event.tool;
-              const toolInput = event.input as Record<string, string>;
-              const detail =
-                toolInput.query ?? toolInput.url ?? "";
-              last.steps = [
-                ...(last.steps ?? []),
-                `${label}${detail ? `: ${detail}` : ""}`,
-              ];
+              const detail = (event.input as Record<string, string>).query ?? (event.input as Record<string, string>).url ?? "";
+              last.steps = [...(last.steps ?? []), `${label}${detail ? `: ${detail}` : ""}`];
             } else if (event.type === "places_saved") {
               last.places = event.places;
             }
@@ -110,128 +121,309 @@ export default function Chat() {
     }
   }
 
+  const hasMessages = messages.length > 0;
+
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto p-4">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Lead Crawler</h1>
-        <p className="text-sm text-gray-500">
-          Ask me to find businesses — I'll search the web and save results to
-          your Google Sheet.
-        </p>
-      </header>
+    <div className="min-h-screen bg-[#f4f4f8] flex flex-col">
+      {/* Conversation area */}
+      <div className="flex-1 overflow-y-auto">
+        {!hasMessages ? (
+          /* Empty state — centered hero */
+          <div className="flex flex-col items-center justify-center min-h-screen px-4 pb-48">
+            {/* Orb */}
+            <div className="w-16 h-16 rounded-full mb-6 bg-gradient-to-br from-indigo-300 via-purple-300 to-blue-400 blur-[2px] opacity-90 shadow-lg shadow-purple-300" />
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && (
-          <div className="text-center text-gray-400 mt-20">
-            <p className="text-lg">Try: "Find barbershops in Austin TX"</p>
+            <h1 className="text-3xl font-bold text-gray-900 text-center leading-snug">
+              {getGreeting()}
+              <br />
+              <span className="text-gray-900">How Can I </span>
+              <span className="text-indigo-500">Assist You Today?</span>
+            </h1>
           </div>
-        )}
-
-        {messages.map((msg, i) => (
-          <div key={i}>
-            {msg.role === "user" ? (
-              <div className="flex justify-end">
-                <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[75%]">
-                  {msg.text}
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-start">
-                <div className="max-w-[90%] space-y-2">
-                  {/* Tool steps */}
-                  {msg.steps && msg.steps.length > 0 && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 space-y-1">
-                      {msg.steps.map((step, j) => (
-                        <div key={j} className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="text-blue-500">•</span>
-                          <span>{step}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Text response */}
-                  {msg.text && (
-                    <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-gray-800 whitespace-pre-wrap">
+        ) : (
+          <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+            {messages.map((msg, i) => (
+              <div key={i}>
+                {msg.role === "user" ? (
+                  <div className="flex justify-end">
+                    <div className="bg-indigo-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] text-sm leading-relaxed">
                       {msg.text}
                     </div>
-                  )}
-
-                  {/* Results table */}
-                  {msg.places && msg.places.length > 0 && (
-                    <div className="overflow-x-auto rounded-xl border border-gray-200">
-                      <table className="text-sm w-full">
-                        <thead className="bg-gray-100 text-gray-600">
-                          <tr>
-                            {["Name", "Phone", "Address", "City", "State", "Categories", "Website", "Email"].map((h) => (
-                              <th key={h} className="px-3 py-2 text-left whitespace-nowrap font-medium">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {msg.places.map((p, j) => (
-                            <tr key={j} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 font-medium whitespace-nowrap">{p.name}</td>
-                              <td className="px-3 py-2 whitespace-nowrap">{p.phone}</td>
-                              <td className="px-3 py-2 whitespace-nowrap">{p.street_address}</td>
-                              <td className="px-3 py-2 whitespace-nowrap">{p.city}</td>
-                              <td className="px-3 py-2">{p.state}</td>
-                              <td className="px-3 py-2">{p.categories}</td>
-                              <td className="px-3 py-2">
-                                {p.website ? (
-                                  <a href={p.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                                    Link
-                                  </a>
-                                ) : "—"}
-                              </td>
-                              <td className="px-3 py-2">{p.email || "—"}</td>
-                            </tr>
+                  </div>
+                ) : (
+                  <div className="flex justify-start">
+                    <div className="max-w-[90%] space-y-3">
+                      {/* Tool steps */}
+                      {msg.steps && msg.steps.length > 0 && (
+                        <div className="bg-white/70 backdrop-blur border border-gray-200 rounded-2xl px-4 py-3 space-y-1.5">
+                          {msg.steps.map((step, j) => (
+                            <div key={j} className="flex items-center gap-2 text-xs text-gray-500">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                              {step}
+                            </div>
                           ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+                          {loading && i === messages.length - 1 && (
+                            <div className="flex items-center gap-2 text-xs text-indigo-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+                              Working...
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-        {loading && messages[messages.length - 1]?.role === "assistant" &&
-          !messages[messages.length - 1].text &&
-          (messages[messages.length - 1] as Extract<Message, { role: "assistant" }>).steps?.length === 0 && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-400 text-sm">
-              Thinking...
-            </div>
+                      {/* Text */}
+                      {msg.text && (
+                        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap shadow-sm">
+                          {msg.text}
+                        </div>
+                      )}
+
+                      {/* Results table */}
+                      {msg.places && msg.places.length > 0 && (
+                        <PlacesTable places={msg.places} />
+                      )}
+
+                      {/* Thinking state */}
+                      {loading && i === messages.length - 1 && !msg.text && (!msg.steps || msg.steps.length === 0) && (
+                        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 text-xs text-gray-400 shadow-sm">
+                          Thinking...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            <div ref={bottomRef} />
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="flex gap-2 pt-2 border-t border-gray-200">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder='e.g. "Find hair salons in Brooklyn NY"'
-          disabled={loading}
-          className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-        />
+      {/* Fixed input bar at bottom */}
+      <div className={`${hasMessages ? "sticky bottom-0" : "fixed bottom-0 left-0 right-0"} px-4 pb-6 pt-2`}>
+        <div className="max-w-2xl mx-auto">
+          {/* Quick action chips — only show before first message */}
+          {!hasMessages && (
+            <div className="flex flex-wrap gap-2 justify-center mb-3">
+              {QUICK_ACTIONS.map((action) => (
+                <button
+                  key={action}
+                  onClick={() => sendMessage(action)}
+                  className="text-xs bg-white border border-gray-200 text-gray-600 rounded-full px-3 py-1.5 hover:border-indigo-300 hover:text-indigo-500 transition-colors shadow-sm"
+                >
+                  {action}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input box */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-md flex items-end gap-2 px-4 py-3">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Initiate a query or send a command to the AI..."
+              disabled={loading}
+              rows={1}
+              className="flex-1 resize-none bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none disabled:opacity-50 leading-relaxed"
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center shrink-0 hover:bg-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const AVATAR_COLORS = [
+  "bg-indigo-100 text-indigo-600",
+  "bg-emerald-100 text-emerald-600",
+  "bg-orange-100 text-orange-600",
+  "bg-pink-100 text-pink-600",
+  "bg-blue-100 text-blue-600",
+  "bg-yellow-100 text-yellow-600",
+];
+
+function PlacesTable({ places }: { places: Place[] }) {
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [showEmail, setShowEmail] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function sendEmail() {
+    if (!emailTo.trim()) return;
+    setEmailStatus("sending");
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: emailTo.trim(), places }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setEmailStatus("sent");
+      setTimeout(() => { setShowEmail(false); setEmailStatus("idle"); setEmailTo(""); }, 2000);
+    } catch {
+      setEmailStatus("error");
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 shadow-sm bg-white overflow-hidden w-full">
+      {/* Header */}
+      <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-gray-100">
+        {["NAME / ADDRESS", "PHONE", "CATEGORIES", "WEBSITE", "ACTION"].map((h) => (
+          <div key={h} className="text-[11px] font-semibold text-gray-400 tracking-wide uppercase">{h}</div>
+        ))}
+      </div>
+
+      {/* Rows */}
+      <div className="divide-y divide-gray-100">
+        {places.map((p, i) => {
+          const initials = p.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+          const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+          const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
+
+          return (
+            <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center px-5 py-4 hover:bg-gray-50 transition-colors">
+              {/* Name + address */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${color}`}>
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
+                  <div className="text-xs text-gray-400 truncate">{address || "—"}</div>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="text-sm text-gray-600">{p.phone || "—"}</div>
+
+              {/* Categories */}
+              <div className="text-sm text-gray-500 truncate">{p.categories || "—"}</div>
+
+              {/* Website */}
+              <div>
+                {p.website ? (
+                  <a href={p.website} target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-indigo-500 hover:underline font-medium">
+                    Visit site
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ) : <span className="text-sm text-gray-400">—</span>}
+              </div>
+
+              {/* Action menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setOpenMenu(openMenu === i ? null : i)}
+                  className="text-indigo-400 hover:text-indigo-600 px-1"
+                >
+                  ···
+                </button>
+                {openMenu === i && (
+                  <div className="absolute right-0 top-6 z-10 bg-white border border-gray-200 rounded-xl shadow-lg py-1 w-36 text-sm">
+                    {p.email && (
+                      <a href={`mailto:${p.email}`}
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
+                        Email
+                      </a>
+                    )}
+                    {p.phone && (
+                      <a href={`tel:${p.phone}`}
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
+                        Call
+                      </a>
+                    )}
+                    {p.website && (
+                      <a href={p.website} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-gray-700">
+                        Website
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+        <span className="text-xs text-gray-400">
+          {places.length} place{places.length !== 1 ? "s" : ""} saved to Google Sheets
+        </span>
         <button
-          onClick={sendMessage}
-          disabled={loading || !input.trim()}
-          className="bg-blue-600 text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setShowEmail(true)}
+          className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition-colors"
         >
-          {loading ? "..." : "Send"}
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          Send via Email
         </button>
       </div>
+
+      {/* Email Modal */}
+      {showEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-1">Send list via Email</h3>
+            <p className="text-xs text-gray-500 mb-4">
+              We'll send {places.length} result{places.length !== 1 ? "s" : ""} as a formatted email.
+            </p>
+
+            <input
+              type="email"
+              value={emailTo}
+              onChange={(e) => setEmailTo(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendEmail()}
+              placeholder="you@example.com"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-4"
+              autoFocus
+            />
+
+            {emailStatus === "error" && (
+              <p className="text-xs text-red-500 mb-3">Failed to send. Check the address and try again.</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setShowEmail(false); setEmailStatus("idle"); setEmailTo(""); }}
+                className="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendEmail}
+                disabled={!emailTo.trim() || emailStatus === "sending" || emailStatus === "sent"}
+                className="flex-1 bg-indigo-500 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {emailStatus === "sending" ? "Sending..." : emailStatus === "sent" ? "Sent!" : "Send"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

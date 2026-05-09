@@ -17,7 +17,9 @@ Extract structured data for each place found. Each place must include:
 - website
 - email
 
-Once you have gathered all the places, call save_to_sheets with the complete list. Then summarize what you found for the user.`;
+Once you have gathered all the places, call save_to_sheets with the complete list.
+
+IMPORTANT: After calling save_to_sheets, respond with ONE short sentence only, like "Found 5 barbershops in Austin, TX — saved to your sheet." Do NOT include markdown tables, bullet lists, numbered lists, or any other formatting. Just the single sentence.`;
 
 const tools: Anthropic.Tool[] = [
   {
