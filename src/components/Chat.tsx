@@ -216,8 +216,16 @@ export default function Chat() {
 
                       {/* Text */}
                       {msg.text && (
-                        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap shadow-sm">
-                          {msg.text}
+                        <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-800 leading-relaxed shadow-sm">
+                          {msg.text.split("\n").map((line, i) => (
+                            <p key={i} className={i > 0 ? "mt-1" : ""}>
+                              {line.split(/(\*\*.*?\*\*)/).map((part, j) =>
+                                part.startsWith("**") && part.endsWith("**")
+                                  ? <strong key={j}>{part.slice(2, -2)}</strong>
+                                  : part
+                              )}
+                            </p>
+                          ))}
                         </div>
                       )}
 
