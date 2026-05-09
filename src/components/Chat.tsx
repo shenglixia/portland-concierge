@@ -203,7 +203,7 @@ export default function Chat() {
 
                       {/* Results cards */}
                       {msg.places && msg.places.length > 0 && (
-                        <PlacesCards places={msg.places} />
+                        <PlacesCards places={msg.places} onRestart={() => { setMessages([]); sessionStorage.removeItem("chat_messages"); }} />
                       )}
 
                       {/* Thinking state */}
@@ -455,7 +455,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
   );
 }
 
-function PlacesCards({ places }: { places: Place[] }) {
+function PlacesCards({ places, onRestart }: { places: Place[]; onRestart: () => void }) {
   const [showEmail, setShowEmail] = useState(false);
   const [emailTo, setEmailTo] = useState("");
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -489,15 +489,26 @@ function PlacesCards({ places }: { places: Place[] }) {
         <span className="text-xs text-gray-400">
           {places.length} place{places.length !== 1 ? "s" : ""} saved to Google Sheets
         </span>
-        <button
-          onClick={() => setShowEmail(true)}
-          className="flex items-center gap-1.5 text-xs font-medium text-[#4a5c3a] hover:text-[#344231] transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          Send via Email
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowEmail(true)}
+            className="flex items-center gap-1.5 text-xs font-medium text-[#4a5c3a] hover:text-[#344231] transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Send via Email
+          </button>
+          <button
+            onClick={onRestart}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Restart Chat
+          </button>
+        </div>
       </div>
 
       {/* Email Modal */}
