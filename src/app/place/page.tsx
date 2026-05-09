@@ -177,7 +177,7 @@ function PlaceDetailContent() {
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 leading-tight">{name}</h2>
+              <h2 className="text-3xl font-bold text-gray-900 leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>{name}</h2>
               {categories && <p className="text-sm text-[#4a5c3a] mt-1">{categories}</p>}
             </div>
             {data && data.rating > 0 && (
