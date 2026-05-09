@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { Place } from "@/lib/agent";
 
 type AgentEvent =
@@ -325,6 +326,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
+  const router = useRouter();
   const [review, setReview] = useState<ReviewData | null>(null);
   const [loadingReview, setLoadingReview] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -338,8 +340,26 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
       .finally(() => setLoadingReview(false));
   }, [p.name, address]);
 
+  function goToDetail() {
+    const qs = new URLSearchParams({
+      name: p.name ?? "",
+      street_address: p.street_address ?? "",
+      city: p.city ?? "",
+      state: p.state ?? "",
+      zip: p.zip ?? "",
+      phone: p.phone ?? "",
+      website: p.website ?? "",
+      categories: p.categories ?? "",
+      email: p.email ?? "",
+    });
+    router.push(`/place?${qs.toString()}`);
+  }
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 hover:shadow-md transition-shadow">
+    <div
+      onClick={goToDetail}
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 hover:shadow-md transition-shadow cursor-pointer"
+    >
       <div className="flex gap-4">
         {/* Logo */}
         {loadingReview && !review ? (
@@ -358,7 +378,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
             {p.website && (
-              <a href={normalizeUrl(p.website)} target="_blank" rel="noreferrer" className="shrink-0 text-indigo-400 hover:text-indigo-600">
+              <a href={normalizeUrl(p.website)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="shrink-0 text-indigo-400 hover:text-indigo-600">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -382,7 +402,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
               <span className="text-xs text-gray-400">({review.reviewCount.toLocaleString()} reviews)</span>
               {review.reviews.length > 0 && (
                 <button
-                  onClick={() => setExpanded(!expanded)}
+                  onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
                   className="text-xs text-indigo-400 hover:text-indigo-600 ml-auto"
                 >
                   {expanded ? "Hide reviews" : "See reviews"}
@@ -394,7 +414,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
           {/* Chips */}
           <div className="flex flex-wrap gap-2 mt-2.5">
             {p.phone && (
-              <a href={`tel:${p.phone}`} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+              <a href={`tel:${p.phone}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -402,7 +422,7 @@ function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
               </a>
             )}
             {p.email && (
-              <a href={`mailto:${p.email}`} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+              <a href={`mailto:${p.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>

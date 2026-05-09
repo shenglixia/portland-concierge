@@ -5,6 +5,8 @@ const API_KEY = process.env.GOOGLE_PLACES_API_KEY!;
 export type ReviewData = {
   rating: number;
   reviewCount: number;
+  photoUrl: string | null;
+  photos: string[];
   reviews: { author: string; text: string; rating: number }[];
 };
 
@@ -25,17 +27,26 @@ export async function GET(req: NextRequest) {
 
   if (!placeId) return NextResponse.json({ error: "Place not found" }, { status: 404 });
 
-  // Step 2: Get place details (rating + reviews)
+  // Step 2: Get place details (rating + reviews + photo)
   const detailRes = await fetch(
-    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating,user_ratings_total,reviews&key=${API_KEY}`
+    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating,user_ratings_total,reviews,photos&key=${API_KEY}`
   );
   const detailData = await detailRes.json();
   const result = detailData.result;
 
+  // Build photo URLs from all available photo references (up to 8)
+  const rawPhotos: { photo_reference: string }[] = result?.photos ?? [];
+  const photos = rawPhotos.slice(0, 8).map(
+    (p) => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${API_KEY}`
+  );
+  const photoUrl = photos[0] ?? null;
+
   const data: ReviewData = {
     rating: result?.rating ?? 0,
     reviewCount: result?.user_ratings_total ?? 0,
-    reviews: (result?.reviews ?? []).slice(0, 3).map((r: {author_name: string; text: string; rating: number}) => ({
+    photoUrl,
+    photos,
+    reviews: (result?.reviews ?? []).slice(0, 5).map((r: {author_name: string; text: string; rating: number}) => ({
       author: r.author_name,
       text: r.text,
       rating: r.rating,
