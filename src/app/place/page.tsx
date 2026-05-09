@@ -237,15 +237,15 @@ function PlaceDetailContent() {
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
                 [
-                  `✨ ${name}`,
-                  categories && `📍 ${categories}`,
-                  address && address,
-                  phone && `📞 ${phone}`,
-                  website && normalizeUrl(website),
+                  `• ${name}`,
+                  categories && `• ${categories}`,
+                  address && `• ${address}`,
+                  phone && `• ${phone}`,
+                  website && `• ${normalizeUrl(website)}`,
                   data?.placeId
-                    ? `👉 https://www.google.com/maps/place/?q=place_id:${data.placeId}`
+                    ? `• https://www.google.com/maps/place/?q=place_id:${data.placeId}`
                     : address
-                    ? `👉 https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + address)}`
+                    ? `• https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + " " + address)}`
                     : null,
                 ]
                   .filter(Boolean)
