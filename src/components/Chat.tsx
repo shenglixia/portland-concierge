@@ -292,6 +292,111 @@ function PlaceLogo({ name, website, colorClass }: { name: string; website?: stri
   );
 }
 
+type ReviewData = {
+  rating: number;
+  reviewCount: number;
+  reviews: { author: string; text: string; rating: number }[];
+};
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-yellow-400 text-sm">★</span>
+      <span className="text-sm font-semibold text-gray-800">{rating.toFixed(1)}</span>
+    </div>
+  );
+}
+
+function PlaceCard({ p, colorClass }: { p: Place; colorClass: string }) {
+  const [review, setReview] = useState<ReviewData | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
+
+  useEffect(() => {
+    fetch(`/api/reviews?name=${encodeURIComponent(p.name)}&address=${encodeURIComponent(address)}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.rating) setReview(d); })
+      .catch(() => {});
+  }, [p.name, address]);
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 hover:shadow-md transition-shadow">
+      <div className="flex gap-4">
+        {/* Logo */}
+        <PlaceLogo name={p.name} website={p.website} colorClass={colorClass} />
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
+            {p.website && (
+              <a href={p.website} target="_blank" rel="noreferrer" className="shrink-0 text-indigo-400 hover:text-indigo-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            )}
+          </div>
+
+          {p.categories && <p className="text-xs text-indigo-500 mt-0.5">{p.categories}</p>}
+          {address && <p className="text-xs text-gray-400 mt-0.5 truncate">{address}</p>}
+
+          {/* Rating */}
+          {review && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <StarRating rating={review.rating} />
+              <span className="text-xs text-gray-400">({review.reviewCount.toLocaleString()} reviews)</span>
+              {review.reviews.length > 0 && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-xs text-indigo-400 hover:text-indigo-600 ml-auto"
+                >
+                  {expanded ? "Hide reviews" : "See reviews"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Chips */}
+          <div className="flex flex-wrap gap-2 mt-2.5">
+            {p.phone && (
+              <a href={`tel:${p.phone}`} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                {p.phone}
+              </a>
+            )}
+            {p.email && (
+              <a href={`mailto:${p.email}`} className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                {p.email}
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Expanded reviews */}
+      {expanded && review && review.reviews.length > 0 && (
+        <div className="mt-4 space-y-3 border-t border-gray-100 pt-3">
+          {review.reviews.map((r, i) => (
+            <div key={i} className="text-xs text-gray-600">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-gray-800">{r.author}</span>
+                <span className="text-yellow-400">{"★".repeat(r.rating)}</span>
+              </div>
+              <p className="text-gray-500 leading-relaxed line-clamp-3">{r.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlacesCards({ places }: { places: Place[] }) {
   const [showEmail, setShowEmail] = useState(false);
   const [emailTo, setEmailTo] = useState("");
@@ -317,61 +422,9 @@ function PlacesCards({ places }: { places: Place[] }) {
 
   return (
     <div className="w-full space-y-2">
-      {places.map((p, i) => {
-        const address = [p.street_address, p.city, p.state, p.zip].filter(Boolean).join(", ");
-        const colorClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
-
-        return (
-          <div key={i} className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-4 flex gap-4 hover:shadow-md transition-shadow">
-            {/* Logo */}
-            <PlaceLogo name={p.name} website={p.website} colorClass={colorClass} />
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-bold text-gray-900 leading-tight">{p.name}</h3>
-                {p.website && (
-                  <a href={p.website} target="_blank" rel="noreferrer"
-                    className="shrink-0 text-indigo-400 hover:text-indigo-600">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                )}
-              </div>
-
-              {p.categories && (
-                <p className="text-xs text-indigo-500 mt-0.5">{p.categories}</p>
-              )}
-              {address && (
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{address}</p>
-              )}
-
-              {/* Chips */}
-              <div className="flex flex-wrap gap-2 mt-2.5">
-                {p.phone && (
-                  <a href={`tel:${p.phone}`}
-                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {p.phone}
-                  </a>
-                )}
-                {p.email && (
-                  <a href={`mailto:${p.email}`}
-                    className="flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2.5 py-1 hover:bg-gray-200">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {p.email}
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      {places.map((p, i) => (
+        <PlaceCard key={i} p={p} colorClass={AVATAR_COLORS[i % AVATAR_COLORS.length]} />
+      ))}
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-1 px-1">

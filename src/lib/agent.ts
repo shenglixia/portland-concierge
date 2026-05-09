@@ -4,9 +4,9 @@ import { firecrawlScrape } from "./firecrawl";
 import { appendToSheet } from "./sheets";
 
 
-const SYSTEM_PROMPT = `You are a lead research assistant. When given a search request, use the search_web tool to find relevant businesses, then use scrape_website to get more details from their websites if needed.
+const SYSTEM_PROMPT = `You are a lead research assistant. When given a search request, use the search_web tool to find relevant businesses.
 
-Extract structured data for each place found. Each place must include:
+Extract structured data for each place found directly from search results. Each place must include:
 - name
 - phone
 - street_address
@@ -16,6 +16,8 @@ Extract structured data for each place found. Each place must include:
 - categories (comma-separated string, e.g. "Barbershop, Hair Salon")
 - website
 - email
+
+Do NOT use scrape_website. Extract all information from search results only.
 
 Once you have gathered all the places, call save_to_sheets with the complete list.
 
@@ -31,17 +33,6 @@ const tools: Anthropic.Tool[] = [
         query: { type: "string", description: "The search query" },
       },
       required: ["query"],
-    },
-  },
-  {
-    name: "scrape_website",
-    description: "Scrape a website URL to extract detailed business information",
-    input_schema: {
-      type: "object",
-      properties: {
-        url: { type: "string", description: "The URL to scrape" },
-      },
-      required: ["url"],
     },
   },
   {
@@ -110,7 +101,7 @@ export async function* runAgent(
     iterations++;
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       tools,
@@ -149,9 +140,6 @@ export async function* runAgent(
         if (toolUse.name === "search_web") {
           const { query } = toolUse.input as { query: string };
           result = await tavilySearch(query);
-        } else if (toolUse.name === "scrape_website") {
-          const { url } = toolUse.input as { url: string };
-          result = await firecrawlScrape(url);
         } else if (toolUse.name === "save_to_sheets") {
           const { places } = toolUse.input as { places: Place[] };
           await appendToSheet(places);
