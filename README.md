@@ -1,4 +1,4 @@
-# Portland Concierge
+# Portland Concierge Agent
 
 An AI-powered venue discovery app for Portland, OR. Ask for the finest bars, restaurants, coffee shops, vineyards, or outdoor experiences — the concierge curates a hand-picked list, pulls Google ratings and photos, and saves results to Google Sheets.
 
